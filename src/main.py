@@ -1,3 +1,4 @@
+from curses import curs_set, endwin, initscr
 from pathlib import Path
 from random import randint
 import time
@@ -21,8 +22,8 @@ def next_board_state(board: Board):
     board.evolve()
 
 
-def render(board: Board) -> None:
-    board.render()
+def render(board: Board, stdscr) -> None:
+    board.render(stdscr)
 
 
 def are_two_boards_equal(board1: Board, board2: Board) -> bool:
@@ -30,13 +31,19 @@ def are_two_boards_equal(board1: Board, board2: Board) -> bool:
 
 
 def play_game_of_life(board: Board) -> None:
-    while True:
-        render(board)
-        next_board_state(board)
-        time.sleep(0.5)
+    stdscr = initscr()
+    try:
+        curs_set(False)
+        while True:
+            render(board, stdscr)
+            next_board_state(board)
+            time.sleep(0.5)
+    finally:
+        curs_set(True)
+        endwin()
 
 
 if __name__ == "__main__":
     # board: Board = random_state(10, 10)
-    board: Board = load_board_state(Path("soups", "random1.txt"))
+    board: Board = load_board_state(Path("soups", "gosper-glider-gun.txt"))
     play_game_of_life(board)

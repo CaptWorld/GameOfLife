@@ -1,3 +1,4 @@
+# from curses import _CursesWindow
 from pathlib import Path
 from typing import List, Callable, Self, Tuple
 
@@ -37,15 +38,22 @@ class Board:
             width, height, state_initializer
         )
 
-    def render(self) -> None:
+    def render(self, stdscr) -> None:
         common_string: str = "-" * (self.width + 2)
-        print(common_string)
+        stdscr.addstr(0, 0, common_string)
         for row in range(self.height):
-            print("|", end="")
-            for col in range(self.width):
-                print("*" if self.state[row][col] == 1 else " ", end="")
-            print("|")
-        print(common_string)
+            stdscr.addch(row + 1, 0, "|")
+            stdscr.addstr(
+                "".join(
+                    [
+                        "*" if self.state[row][col] == 1 else " "
+                        for col in range(self.width)
+                    ]
+                )
+            )
+            stdscr.addch("|")
+        stdscr.addstr(self.height + 1, 0, common_string)
+        stdscr.refresh()
 
     def evolve(self) -> None:
         self.state = Board.return_state_from_initializer(
@@ -53,7 +61,8 @@ class Board:
         )
 
     def _next_state_of_cell(self, col: int, row: int) -> int:
-        return int(self._alive_neighbours(col, row) in [2, 3])
+        alive_neighbours: int = self._alive_neighbours(col, row)
+        return int(alive_neighbours in ([2, 3] if self.state[row][col] else [3]))
 
     def _alive_neighbours(self, col: int, row: int) -> int:
         min_row: int = max(row - 1, 0)
